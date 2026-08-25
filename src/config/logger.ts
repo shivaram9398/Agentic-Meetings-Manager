@@ -1,6 +1,6 @@
 import pino from "pino";
 
-const isDevelopment = process.env.NODE_ENV === "dev" || "qa";
+const isDevelopment = ["dev", "qa"].includes(process.env.NODE_ENV ?? "");
 
 export const logger = pino({
   level: isDevelopment ? "debug" : "info",
