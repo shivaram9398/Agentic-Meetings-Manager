@@ -1,12 +1,20 @@
 import "./config/env";
-
 import express from "express";
 import { connectRedis, redisClient } from "./config/redis";
 import { logger } from "./config/logger";
+import authRoutes from "./routes/auth.routes";
+import { loggerMiddleware } from "./middlewares/logger.middleware";
+import { requestIdMiddleware } from "./middlewares/request-id.middleware";
+import { errorMiddleware } from "./middlewares/error.middleware";
 
 const app = express();
 
 app.use(express.json());
+app.use(requestIdMiddleware);
+app.use(express.json());
+app.use(loggerMiddleware);
+app.use("/auth", authRoutes);
+app.use(errorMiddleware);
 
 const startServer = async (): Promise<void> => {
   try {
