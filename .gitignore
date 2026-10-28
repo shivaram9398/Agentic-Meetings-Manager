@@ -20,6 +20,9 @@ envs/.env.*
 dist/
 build/
 
+# Prisma generated client (run `npm run prisma:generate`)
+src/generated/
+
 # =========================
 # Logs
 # =========================

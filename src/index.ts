@@ -1,24 +1,27 @@
 import "./config/env";
 import express from "express";
-import { connectRedis, redisClient } from "./config/redis";
+// import { connectRedis, redisClient } from "./config/redis";
+import { connectDatabase, disconnectDatabase } from "./config/database";
 import { logger } from "./config/logger";
 import authRoutes from "./routes/auth.routes";
 import { loggerMiddleware } from "./middlewares/logger.middleware";
 import { requestIdMiddleware } from "./middlewares/request-id.middleware";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { corsMiddleware } from "./middlewares/cors.middleware";
 
 const app = express();
 
 app.use(express.json());
 app.use(requestIdMiddleware);
-app.use(express.json());
+app.use(corsMiddleware);
 app.use(loggerMiddleware);
 app.use("/auth", authRoutes);
 app.use(errorMiddleware);
 
 const startServer = async (): Promise<void> => {
   try {
-    await connectRedis();
+    // await connectRedis();
+    await connectDatabase();
 
     const server = app.listen(process.env.PORT, () => {
       logger.info(
@@ -48,14 +51,14 @@ const startServer = async (): Promise<void> => {
 
         try {
           // 2. Close Redis
-          if (redisClient.isOpen) {
-            await redisClient.quit();
+          // if (redisClient.isOpen) {
+          //   await redisClient.quit();
 
-            logger.info("Redis connection closed");
-          }
+          //   logger.info("Redis connection closed");
+          // }
 
           // 3. Close database
-          // await disconnectDatabase();
+          await disconnectDatabase();
 
           logger.info("Graceful shutdown completed");
 
