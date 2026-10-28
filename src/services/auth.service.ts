@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+import { Prisma } from "../generated/prisma/client";
 import { AppError } from "../utils/app-error";
 import { UserRepository, type User } from "../repositories/user.repository";
 
@@ -27,13 +28,25 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(input.password, 12);
 
-    const user = await this.userRepository.create({
-      name: input.name,
-      email: input.email,
-      password: hashedPassword,
-    });
+    try {
+      const user = await this.userRepository.create({
+        name: input.name,
+        email: input.email,
+        password: hashedPassword,
+      });
 
-    return this.formatUser(user);
+      return this.formatUser(user);
+    } catch (error) {
+      // Two concurrent registrations can both pass the check above
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new AppError("User already exists", 409);
+      }
+
+      throw error;
+    }
   }
 
   async login(input: LoginInput) {
