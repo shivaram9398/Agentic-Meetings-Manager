@@ -1,33 +1,38 @@
+import { prisma } from "../config/database";
+import type { User } from "../generated/prisma/client";
+
+export type { User };
+
 export interface CreateUserInput {
   name: string;
   email: string;
   password: string;
 }
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-}
+export type UpdateUserInput = Partial<CreateUserInput>;
 
 export class UserRepository {
-  private users: User[] = [];
+  async findById(id: string): Promise<User | null> {
+    return prisma.user.findUnique({ where: { id } });
+  }
 
-  async findByEmail(email: string): Promise<User | undefined> {
-    return this.users.find((user) => user.email === email);
+  async findByEmail(email: string): Promise<User | null> {
+    return prisma.user.findUnique({ where: { email } });
+  }
+
+  async findAll(): Promise<User[]> {
+    return prisma.user.findMany({ orderBy: { createdAt: "desc" } });
   }
 
   async create(input: CreateUserInput): Promise<User> {
-    const user: User = {
-      id: crypto.randomUUID(),
-      name: input.name,
-      email: input.email,
-      password: input.password,
-    };
+    return prisma.user.create({ data: input });
+  }
 
-    this.users.push(user);
+  async update(id: string, input: UpdateUserInput): Promise<User> {
+    return prisma.user.update({ where: { id }, data: input });
+  }
 
-    return user;
+  async delete(id: string): Promise<User> {
+    return prisma.user.delete({ where: { id } });
   }
 }
